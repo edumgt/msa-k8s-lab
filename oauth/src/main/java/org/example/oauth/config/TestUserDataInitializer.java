@@ -4,19 +4,23 @@ import org.example.oauth.model.User;
 import org.example.oauth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TestUserDataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final boolean seedEnabled;
 
     public TestUserDataInitializer(
             UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
             @Value("${app.seed.test-users.enabled:true}") boolean seedEnabled
     ) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.seedEnabled = seedEnabled;
     }
 
@@ -31,11 +35,11 @@ public class TestUserDataInitializer implements CommandLineRunner {
         upsertUser("test3", "test3", "123456");
     }
 
-    private void upsertUser(String email, String name, String password) {
+    private void upsertUser(String email, String name, String rawPassword) {
         User user = userRepository.findByEmail(email).orElseGet(User::new);
         user.setEmail(email);
         user.setName(name);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(rawPassword));
         userRepository.save(user);
     }
 }

@@ -5,10 +5,13 @@ import org.example.chatservice.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
@@ -22,14 +25,14 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/chat/search").permitAll()
-                        .requestMatchers("/chat/admin/**").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/chat/whoami")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/chat/search")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/chat/admin/**")).permitAll()
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/health/**")).permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(form -> form.disable())
-
                 .addFilterBefore(new CookieJwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

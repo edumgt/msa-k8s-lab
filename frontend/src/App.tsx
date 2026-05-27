@@ -28,13 +28,13 @@ function LoginRequired() {
     <section className="rounded-3xl border border-amber-200 bg-amber-50 p-8 text-amber-900 shadow-lg">
       <h2 className="font-display text-3xl">로그인이 필요합니다</h2>
       <p className="mt-3 text-sm">
-        OAuth 로그인 후 SPA를 바로 사용할 수 있습니다.
+        이메일/비밀번호 로그인 또는 Google 계정으로 시작하세요.
       </p>
       <a
         href="/auth/login"
         className="mt-5 inline-flex rounded-full bg-ink px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
       >
-        OAuth 로그인
+        로그인 하기
       </a>
     </section>
   );
@@ -820,7 +820,7 @@ function RootApp() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/chat/me", { credentials: "include" })
+    fetch("/chat/whoami", { credentials: "include" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (data && data.username) {

@@ -23,7 +23,7 @@ public class CookieJwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> JWT_OPTIONAL_PATH_PREFIXES = List.of(
             "/chat/admin",
             "/chat/search",
-            "/chat/me",
+            "/chat/whoami",
             "/actuator"
     );
     private final JwtUtil jwtUtil;

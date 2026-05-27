@@ -1,6 +1,8 @@
 networks:
   microservices-net:
     driver: bridge
+  shared-net:
+    external: true
 
 
 services:
@@ -22,7 +24,7 @@ services:
     build: ./api-gateway
     container_name: api-gateway
     ports:
-      - "9999:9999"
+      - "9901:9999"
     networks:
       - microservices-net
     depends_on:
@@ -49,8 +51,12 @@ services:
     environment:
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-client-id}
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-client-secret}
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/chat-app-users
+      APP_AUTH_SUCCESS_REDIRECT_URI: http://localhost:5173
+      APP_OAUTH_REDIRECT_URI: http://localhost:9901/auth/login/oauth2/code/google
     networks:
       - microservices-net
+      - shared-net
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -65,80 +71,35 @@ services:
       APP_WEBSOCKET_REDIS_ENABLED: "true"
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/chat-app-messages
     networks:
       - microservices-net
+      - shared-net
     depends_on:
       eureka-server:
         condition: service_healthy
-      redis:
-        condition: service_started
     restart: always
 
   profile-service:
     build: ./profile-service
     container_name: profile-service
     ports:
-      - "8083:8083"
+      - "18083:8083"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/chat-app-profiles
     networks:
       - microservices-net
+      - shared-net
     depends_on:
       eureka-server:
         condition: service_healthy
-    restart: always
-
-  mongodb-profiles:
-    image: mongo:latest
-    container_name: mongodb-profiles
-    ports:
-      - "27018:27017"
-    environment:
-      MONGO_INITDB_DATABASE: chat-app-profiles
-    volumes:
-      - mongodb_profiles_data:/data/db
-    networks:
-      - microservices-net
-    restart: always
-
-  mongodb-users:
-    image: mongo:latest
-    container_name: mongodb-users
-    ports:
-      - "27019:27017"
-    environment:
-      MONGO_INITDB_DATABASE: chat-app-users
-    volumes:
-      - mongodb_users_data:/data/db
-    networks:
-      - microservices-net
-    restart: always
-
-  mongodb-messages:
-    image: mongo:latest
-    container_name: mongodb-messages
-    ports:
-      - "27020:27017"
-    environment:
-      MONGO_INITDB_DATABASE: chat-app-messages
-    volumes:
-      - mongodb_messages_data:/data/db
-    networks:
-      - microservices-net
-    restart: always
-
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - microservices-net
     restart: always
 
   prometheus:
     image: prom/prometheus:v2.54.1
     container_name: prometheus
     ports:
-      - "9090:9090"
+      - "19090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
@@ -150,8 +111,3 @@ services:
       - chat-service
       - profile-service
     restart: always
-
-volumes:
-  mongodb_profiles_data:
-  mongodb_users_data:
-  mongodb_messages_data:
